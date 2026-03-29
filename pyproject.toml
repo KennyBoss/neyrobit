@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0", "cmake>=3.18", "pybind11>=2.12.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neurobit"
+version = "1.0.0"
+description = "Fast, N-bit quantization and compression library for AI models."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "NeuroBit Contributors"}
+]
+dependencies = [
+    "numpy>=1.20.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/neurobit/neurobit"
+Issues = "https://github.com/neurobit/neurobit/issues"
+
+[tool.setuptools]
+packages = ["neurobit"]
+package-dir = {"" = "python"}
