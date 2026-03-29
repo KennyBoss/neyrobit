@@ -86,4 +86,47 @@ std::vector<float> dequantize_nbit4_to_f32(const QuantizationResult& q) {
     return result;
 }
 
+// AccessLogger implementation
+void AccessLogger::record_access(uint16_t tensor_id, size_t weight_idx, InferenceContext ctx) {
+    uint16_t block_id = static_cast<uint16_t>(weight_idx / 256);
+    BlockKey key{tensor_id, block_id};
+    
+    auto& entry = stats[key];
+    if (entry.count < 0xFFFFFFFF) {
+        entry.count++;
+    }
+    entry.context_mask |= (1 << static_cast<uint8_t>(ctx));
+}
+
+std::vector<AccessEntry> AccessLogger::get_top_entries(size_t limit) const {
+    // Sort by count descending
+    struct FullEntry {
+        BlockKey key;
+        BlockStats stats;
+    };
+    std::vector<FullEntry> sorted;
+    for (auto const& [key, stat] : stats) {
+        sorted.push_back({key, stat});
+    }
+    
+    std::sort(sorted.begin(), sorted.end(), [](const FullEntry& a, const FullEntry& b) {
+        return a.stats.count > b.stats.count;
+    });
+    
+    std::vector<AccessEntry> result;
+    for (size_t i = 0; i < std::min(limit, sorted.size()); ++i) {
+        AccessEntry ae;
+        ae.tensor_id = sorted[i].key.tensor_id;
+        ae.block_id = sorted[i].key.block_id;
+        ae.count = static_cast<uint8_t>(std::min(static_cast<uint32_t>(255), sorted[i].stats.count));
+        ae.context = sorted[i].stats.context_mask;
+        result.push_back(ae);
+    }
+    return result;
+}
+
+void AccessLogger::clear() {
+    stats.clear();
+}
+
 } // namespace neurobit

@@ -24,6 +24,9 @@ include_directories(include)
 # Core library
 add_library(neurobit_core SHARED
     src/neurobit.cpp
+    src/file_io.cpp
+    src/adaptive_quantizer.cpp
+    src/simd_kernels.cpp
 )
 
 target_include_directories(neurobit_core PUBLIC include)
