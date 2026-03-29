@@ -34,9 +34,24 @@ pybind11_add_module(neurobit
 )
 target_link_libraries(neurobit PRIVATE neurobit_core)
 
-# Option for AVX
-if(APPLE AND CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
-    message(STATUS "Native compilation for Apple Silicon (NEON)")
+# Option for AVX/SIMD
+if(APPLE)
+    # On Apple, we check if it is explicitly arm64 or if it's NOT explicitly x86_64
+    if(CMAKE_OSX_ARCHITECTURES MATCHES "arm64" OR NOT CMAKE_OSX_ARCHITECTURES MATCHES "x86_64")
+        if (CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+             message(STATUS "Native compilation for Apple Silicon (ARM64)")
+        else()
+             message(STATUS "Skipping AVX2 (Default Mac behavior or ARM)")
+        endif()
+    else()
+        target_compile_options(neurobit_core PRIVATE -mavx2)
+        message(STATUS "Enabling AVX2 for x86_64 macOS")
+    endif()
 else()
-    target_compile_options(neurobit_core PRIVATE -mavx2)
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|i386")
+        target_compile_options(neurobit_core PRIVATE -mavx2)
+        message(STATUS "Enabling AVX2 for x86_64 Linux/Windows")
+    else()
+        message(STATUS "Skipping AVX2 (Non x86 system or ARM: ${CMAKE_SYSTEM_PROCESSOR})")
+    endif()
 endif()
