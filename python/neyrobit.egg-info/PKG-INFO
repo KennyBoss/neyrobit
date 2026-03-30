@@ -1,7 +1,22 @@
+Metadata-Version: 2.4
+Name: neyrobit
+Version: 1.0.0
+Summary: Psi-Compress: High-performance neuro-symbolic compression engine.
+Author: Kanan Musaev Yagub oqli
+License-Expression: MIT
+Project-URL: Homepage, https://github.com/KennyBoss/neyrobit
+Project-URL: Issues, https://github.com/KennyBoss/neyrobit/issues
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy>=1.20.0
+Requires-Dist: torch>=2.0.0
+Requires-Dist: transformers>=4.30.0
+Dynamic: license-file
+
 # Psi-Compress (NeuroBit)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![PyPI](https://img.shields.io/pypi/v/neyrobit.svg)](https://pypi.org/project/neyrobit/)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
 [![C++17](https://img.shields.io/badge/C++-17-blue.svg)](https://isocpp.org)
 
@@ -16,7 +31,7 @@ Psi-Compress (NeuroBit) is a high-performance neuro-symbolic compression engine.
 
 ## Quick Start
 ```bash
-pip install neyrobit
+pip install neurobit  # coming soon to PyPI
 python examples/train_llm_psy.py --model models/tinyllama --psy_compress
 ```
 
@@ -29,8 +44,8 @@ python examples/train_llm_psy.py --model models/tinyllama --psy_compress
 | Metric | Standard (FP16) | Psi-Compress (.nbit) | Result |
 | :--- | :--- | :--- | :--- |
 | **Model Size** | 2.2 GB | **658 MB** | **~3.4x Compression** |
-| **Identity Protection** | N/A | **Active (6-bit)** | Critical layers auto-protected |
-| **Reconstruction Error**| 0.00000 | **0.00001 (MSE)** | Lossless for critical info |
+| **Identity Protection** | N/A | **Active (6-bit)** | Critical layers detected |
+| **Reconstruction Error**| 0.00000 | **0.00001 (MSE)** | Almost lossless for critical info |
 
 ## Target Audience
 - AI Researchers: Study computational subjectivity
@@ -46,7 +61,7 @@ Psi-Compress (NeuroBit) — это высокопроизводительный 
 
 ## Быстрый старт
 ```bash
-pip install neyrobit
+pip install neurobit  # скоро в PyPI
 python examples/train_llm_psy.py --model models/tinyllama --psy_compress
 ```
 

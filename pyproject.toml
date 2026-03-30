@@ -3,23 +3,26 @@ requires = ["setuptools>=61.0", "cmake>=3.18", "pybind11>=2.12.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "neurobit"
+name = "neyrobit"
 version = "1.0.0"
-description = "Fast, N-bit quantization and compression library for AI models."
+description = "Psi-Compress: High-performance neuro-symbolic compression engine."
 readme = "README.md"
-requires-python = ">=3.8"
-license = {text = "MIT"}
+requires-python = ">=3.10"
+license = "MIT"
 authors = [
-    {name = "NeuroBit Contributors"}
+    {name = "Kanan Musaev Yagub oqli"}
 ]
 dependencies = [
-    "numpy>=1.20.0"
+    "numpy>=1.20.0",
+    "torch>=2.0.0",
+    "transformers>=4.30.0"
 ]
 
 [project.urls]
-Homepage = "https://github.com/neurobit/neurobit"
-Issues = "https://github.com/neurobit/neurobit/issues"
+Homepage = "https://github.com/KennyBoss/neyrobit"
+Issues = "https://github.com/KennyBoss/neyrobit/issues"
 
 [tool.setuptools]
 packages = ["neurobit"]
 package-dir = {"" = "python"}
+include-package-data = true
