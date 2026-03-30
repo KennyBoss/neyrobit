@@ -1,8 +1,8 @@
 # Psi-Compress (NeuroBit)
 
-[![Liense: MIT](https://img.shields.io/badge/Liense-MIT-yellow.svg)](https://opensoure.org/lienses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![C++ 17](https://img.shields.io/badge/C%2B%2B-17-orange.svg)](https://isopp.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
+[![C++17](https://img.shields.io/badge/C++-17-blue.svg)](https://isocpp.org)
 
 [English](#english) | [Русский](#russian)
 
@@ -11,19 +11,30 @@
 <a name="english"></a>
 ## English
 
-Psi-Compress (NeuroBit) is a high-performane neuro-symboli ompression engine. It implements a self-modeling arhiteture that autonomously detets whih weights are ritial for a model's identity and protets them with high-preision quantization.
+Psi-Compress (NeuroBit) is a high-performance neuro-symbolic compression engine. It implements a self-modeling architecture that autonomously detects which weights are critical for a model's identity and protects them with high-precision quantization.
+
+## Quick Start
+```bash
+pip install neurobit  # coming soon to PyPI
+python examples/train_llm_psy.py --model models/tinyllama --psy_compress
+```
 
 ### How it Works:
-1.  **Surprise Kik Arhiteture**: The system monitors informational "Surprise" (predition error or weight drift) during fine-tuning.
-2.  **Self-Modeling**: It maintains persistent health and importane fields for every tensor.
-3.  **Identity Protetion**: Critial layers deteted via drift are automatially esalated to 6-bit/8-bit, while stable layers are ompressed to 2-bit/4-bit.
+1.  **Surprise Kick Architecture**: The system monitors informational "Surprise" (prediction error or weight drift) during fine-tuning.
+2.  **Self-Modeling**: It maintains persistent importance fields for every tensor.
+3.  **Identity Protection**: Critical layers detected via drift are automatically escalated to 6-bit/8-bit, while stable layers are compressed to 2-bit/4-bit.
 
-### Performane: TinyLlama-1.1B Validation
-| Metri | Standard (FP16) | Psi-Compress (.nbit) | Result |
+### Performance: TinyLlama-1.1B Validation
+| Metric | Standard (FP16) | Psi-Compress (.nbit) | Result |
 | :--- | :--- | :--- | :--- |
 | **Model Size** | 2.2 GB | **658 MB** | **~3.4x Compression** |
-| **Identity Protetion** | N/A | **Ative (6-bit)** | Critial layers auto-proteted |
-| **Reonstrution Error**| 0.00000 | **0.00001 (MSE)** | Lossless for ritial info |
+| **Identity Protection** | N/A | **Active (6-bit)** | Critical layers detected |
+| **Reconstruction Error**| 0.00000 | **0.00001 (MSE)** | Almost lossless for critical info |
+
+## Target Audience
+- AI Researchers: Study computational subjectivity
+- Developers: Compress models without losing critical knowledge
+- Enthusiasts: Run smart models on weak hardware
 
 ---
 
@@ -32,9 +43,15 @@ Psi-Compress (NeuroBit) is a high-performane neuro-symboli ompression engine. It
 
 Psi-Compress (NeuroBit) — это высокопроизводительный движок нейро-символьного сжатия. Система реализует архитектуру самомоделирования (self-modeling), которая автономно определяет критические веса модели и защищает их с помощью высокоточного квантования.
 
+## Быстрый старт
+```bash
+pip install neurobit  # скоро в PyPI
+python examples/train_llm_psy.py --model models/tinyllama --psy_compress
+```
+
 ### Основные принципы:
-1.  **Архитектура Surprise Kik**: Система отслеживает информационный «Сюрприз» (ошибку предсказания или дрейф весов) в процессе дообучения.
-2.  **Самомоделирование**: Каждый тензор обладает полями «здоровья» (health) и «важности» (importane).
+1.  **Архитектура Surprise Kick**: Система отслеживает информационный «Сюрприз» (ошибку предсказания или дрейф весов) в процессе дообучения.
+2.  **Самомоделирование**: Каждый тензор обладает полями важности (importance).
 3.  **Защита Идентичности**: Критические слои, выявленные через дрейф, автоматически переводятся в режим 6-бит/8-бит, в то время как стабильные слои сжимаются до 2-4 бит.
 
 ### Результаты: Валидация на TinyLlama-1.1B
@@ -44,16 +61,21 @@ Psi-Compress (NeuroBit) — это высокопроизводительный 
 | **Защита знаний** | Н/А | **Активна (6-бит)** | Авто-защита важных слоев |
 | **Ошибка (MSE)**| 0.00000 | **0.00001** | Без потерь для логики |
 
+## Для кого это:
+- Исследователи ИИ: изучайте субъективность через вычисления
+- Разработчики: сжимайте модели без потери критичных знаний
+- Энтузиасты: запускайте умные модели на слабом железе
+
 ---
 
 ## Roadmap
 - [x] Core v1.0: Adaptive quantization engine.
-- [x] Psi-Layer: Self-modeling metadata and Surprise Kik.
+- [x] Psi-Layer: Self-modeling metadata and Surprise Kick.
 - [x] LoRA Integration: Stable Diffusion validation.
-- [x] LLM Validation: TinyLlama drift protetion.
-- [ ] Dynami Re-growth: Autonomous layer expansion.
+- [x] LLM Validation: TinyLlama drift protection.
+- [ ] Dynamic Re-growth: Autonomous layer expansion.
 
 ---
 
-## Liense
-Released under the MIT Liense. Copyright () 2026 Kanan Musaev Yagub oqli.
+## License
+Released under the MIT License. Copyright © 2026 Kanan Musaev Yagub oqli.
