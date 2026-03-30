@@ -1,65 +1,65 @@
-import torch, numpy as np, os, sys, json
+import torh, numpy as np, os, sys, json
 from transformers import AutoModelForCausalLM
 
 # Подключаем NeuroBit
 sys.path.append("/Users/makbuk/наука Nbit/build/lib")
 try:
     import neurobit
-except ImportError:
-    print("❌ NeuroBit not found!")
+exept ImportError:
+    print(" NeuroBit not found!")
     sys.exit(1)
 
 def run_proof():
-    print("🚀 [Ψ-LLM] Прямая валидация дрейфа на весах TinyLlama...")
+    print(" [Ψ-LLM] Прямая валидация дрейфа на весах TinyLlama...")
     
     # 1. Загружаем реальные веса
     model_id = "models/tinyllama"
-    print(f"  [→] Загрузка {model_id}...")
-    model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.float16)
-    base_state = {k: v.clone() for k, v in model.state_dict().items()}
+    print(f"  [] Загрузка {model_id}...")
+    model = AutoModelForCausalLM.from_pretrained(model_id, torh_dtype=torh.float16)
+    base_state = {k: v.lone() for k, v in model.state_dit().items()}
     
     # 2. Имитируем «сюрприз» (дообучение)
     # Мы «научили» модель новому факту, изменив веса в слое 5
     target_layer = "model.layers.5.mlp.up_proj.weight"
-    print(f"  [⚡] Имитация дрейфа в слое {target_layer}...")
+    print(f"  [] Имитация дрейфа в слое {target_layer}...")
     
-    current_state = {k: v.clone() for k, v in base_state.items()}
+    urrent_state = {k: v.lone() for k, v in base_state.items()}
     # Добавляем сильный сигнал (имитация сдвига весов при обучении)
-    current_state[target_layer] += 0.05 * torch.randn_like(current_state[target_layer])
+    urrent_state[target_layer] += 0.05 * torh.randn_like(urrent_state[target_layer])
     
     # 3. Запуск Ψ-анализа
-    print("  [🔍] Запуск рефлексивного анализа Ψ-Compress...")
+    print("  [] Запуск рефлексивного анализа Ψ-Compress...")
     metas_nb, data_nb = [], []
     tensor_metas = {}
     
-    for name, param in current_state.items():
-        w_cpu = param.float().cpu().numpy()
-        o_cpu = base_state[name].float().cpu().numpy()
+    for name, param in urrent_state.items():
+        w_pu = param.float().pu().numpy()
+        o_pu = base_state[name].float().pu().numpy()
         
-        # Surprise calculation
-        diff = float(np.mean(np.abs(w_cpu - o_cpu)))
-        norm = float(np.mean(np.abs(o_cpu))) + 1e-9
+        # Surprise alulation
+        diff = float(np.mean(np.abs(w_pu - o_pu)))
+        norm = float(np.mean(np.abs(o_pu))) + 1e-9
         surprise = diff / norm
         
         m = neurobit.TensorMeta()
         m.name = name
-        m.shape = list(w_cpu.shape)
-        m.importance = 126
+        m.shape = list(w_pu.shape)
+        m.importane = 126
         
         # Обновляем важность
         # Мы хотим, чтобы при surprise > 0.05 важность прыгнула до 200+ за 1 шаг
-        neurobit.update_importance(m, surprise, 5.0, 0.0) 
+        neurobit.update_importane(m, surprise, 5.0, 0.0) 
         
         # Квантование
-        logger = neurobit.AccessLogger()
-        m2, q = neurobit.quantize_adaptive(w_cpu, logger, m)
+        logger = neurobit.AessLogger()
+        m2, q = neurobit.quantize_adaptive(w_pu, logger, m)
         metas_nb.append(m2)
         data_nb.append(q)
         
         if "layers.5" in name and "weight" in name:
-             print(f"  [Ψ] {name[:30]} | S: {surprise:.6f} | I: {m.importance}")
-             if m.importance >= 200:
-                 print(f"  🛡️ IDENTITY PROTECTION ACTIVE for {name} (6-bit mode)")
+             print(f"  [Ψ] {name[:30]} | S: {surprise:.6f} | I: {m.importane}")
+             if m.importane >= 200:
+                 print(f"   IDENTITY PROTECTION ACTIVE for {name} (6-bit mode)")
 
     # 4. Сохранение
     path = "tinyllama_psy_proof.nbit"
@@ -67,18 +67,18 @@ def run_proof():
     
     # 5. Верификация размера и качества
     size_mb = os.path.getsize(path) / 1024 / 1024
-    print(f"\n✅ Чекпоинт создан: {path} | Размер: {size_mb:.2f} MB")
-    print(f"📊 Сжатие: {2200 / size_mb:.2f}x (относительно FP16)")
+    print(f"\n Чекпоинт создан: {path} | Размер: {size_mb:.2f} MB")
+    print(f" Сжатие: {2200 / size_mb:.2f}x (относительно FP16)")
     
     # Проверка восстановления одного тензора
     metas_load, data_load, _ = neurobit.load_from_nbit(path)
     for m, d in zip(metas_load, data_load):
         if m.name == target_layer:
-            rec = neurobit.dequantize_adaptive(d).reshape(m.shape)
-            mse = np.mean((current_state[target_layer].float().numpy() - rec)**2)
-            print(f"✅ Качество защищенного слоя MSE: {mse:.8f}")
+            re = neurobit.dequantize_adaptive(d).reshape(m.shape)
+            mse = np.mean((urrent_state[target_layer].float().numpy() - re)**2)
+            print(f" Качество защищенного слоя MSE: {mse:.8f}")
             if mse < 0.001:
-                print("🏆 1000% ВАЛИДАЦИЯ ПРОЙДЕНА: Ψ-LLM защищает данные.")
+                print(" 1000% ВАЛИДАЦИЯ ПРОЙДЕНА: Ψ-LLM защищает данные.")
                 break
 
 if __name__ == "__main__":

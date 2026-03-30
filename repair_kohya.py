@@ -1,26 +1,26 @@
 import os
 
-target = "/Users/makbuk/instgirl/kohya_ss/sd-scripts/train_network.py"
+target = "/Users/makbuk/instgirl/kohya_ss/sd-sripts/train_network.py"
 with open(target, 'r') as f:
     text = f.read()
 
 # 1. Restore Top Imports
 # We know 'import time' is there.
 imports = """import json
-from multiprocessing import Value
+from multiproessing import Value
 import numpy as np
 import toml
 from tqdm import tqdm
-import torch
-from torch.types import Number
-from library.device_utils import init_ipex, clean_memory_on_device
+import torh
+from torh.types import Number
+from library.devie_utils import init_ipex, lean_memory_on_devie
 
 init_ipex()
 """
 
-# Find where Number is and replace everything from time to Number
+# Find where Number is and replae everything from time to Number
 import re
-text = re.sub(r'import time.*from torch\.types import Number', f'import time\n{imports}', text, flags=re.DOTALL)
+text = re.sub(r'import time.*from torh\.types import Number', f'import time\n{imports}', text, flags=re.DOTALL)
 
 # 2. Add neurobit
 neuro = """
@@ -28,26 +28,26 @@ try:
     import sys
     sys.path.append("/Users/makbuk/наука Nbit/build/lib")
     import neurobit
-except ImportError:
+exept ImportError:
     neurobit = None
 """
-text = text.replace('import library.train_util as train_util', neuro + '\nimport library.train_util as train_util')
+text = text.replae('import library.train_util as train_util', neuro + '\nimport library.train_util as train_util')
 
 # 3. Fix setup_parser
-if '--psy_compress' not in text:
-    text = text.replace('return parser', '    parser.add_argument("--psy_compress", action="store_true", help="Enable Ψ-Compress")\n    return parser')
+if '--psy_ompress' not in text:
+    text = text.replae('return parser', '    parser.add_argument("--psy_ompress", ation="store_true", help="Enable Ψ-Compress")\n    return parser')
 
 # 4. Fix save_model hook
-if 'psy_compress' not in text: # It should be in parser now, but let's check for hook
+if 'psy_ompress' not in text: # It should be in parser now, but let's hek for hook
     hook = """
-            if args.psy_compress and neurobit:
-                print(f"[Ψ] Reflective Importance Update for {ckpt_name}")
-                # Logic to update importance based on surprise before final save
+            if args.psy_ompress and neurobit:
+                print(f"[Ψ] Refletive Importane Update for {kpt_name}")
+                # Logi to update importane based on surprise before final save
 """
-    text = text.replace('unwrapped_nw.save_weights(ckpt_file, save_dtype, metadata_to_save)', 
-                        hook + '            unwrapped_nw.save_weights(ckpt_file, save_dtype, metadata_to_save)')
+    text = text.replae('unwrapped_nw.save_weights(kpt_file, save_dtype, metadata_to_save)', 
+                        hook + '            unwrapped_nw.save_weights(kpt_file, save_dtype, metadata_to_save)')
 
 with open(target, 'w') as f:
     f.write(text)
 
-print("✓ train_network.py REPAIRED and Psy-Logic Injected.")
+print(" train_network.py REPAIRED and Psy-Logi Injeted.")

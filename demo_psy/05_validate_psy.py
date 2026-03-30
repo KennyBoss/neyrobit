@@ -2,8 +2,8 @@
 import argparse, numpy as np, time, sys, os
 from safetensors.numpy import load_file, save_file
 
-sys.path.append(os.path.join(os.getcwd(), 'build'))
-sys.path.append(os.path.join(os.getcwd(), 'build', 'lib'))
+sys.path.append(os.path.join(os.getwd(), 'build'))
+sys.path.append(os.path.join(os.getwd(), 'build', 'lib'))
 
 import neurobit
 
@@ -23,11 +23,11 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--model', required=True)
     p.add_argument('--data', required=True)
-    p.add_argument('--epochs', type=int, default=5)
-    p.add_argument('--verbose', action='store_true')
+    p.add_argument('--epohs', type=int, default=5)
+    p.add_argument('--verbose', ation='store_true')
     args = p.parse_args()
 
-    print(f"🚀 [✓] Loading: {args.model}")
+    print(f" [] Loading: {args.model}")
     orig_tensors = load_file(args.model)
     
     # Baseline
@@ -39,26 +39,26 @@ def main():
     for key, val in orig_tensors.items():
         m = neurobit.TensorMeta(key, list(val.shape))
         m.health = 255
-        m.importance = 100 # Start higher to reach threshold faster
+        m.importane = 100 # Start higher to reah threshold faster
         psy_metas.append(m)
         
-    logger = neurobit.AccessLogger()
+    logger = neurobit.AessLogger()
     
-    print("\n🧬 Starting self-protection loop...")
-    for epoch in range(args.epochs):
+    print("\n Starting self-protetion loop...")
+    for epoh in range(args.epohs):
         total_surprise = 0
         for i, (key, val) in enumerate(orig_tensors.items()):
             noise = np.random.normal(0, 0.2, val.shape).astype(np.float32)
-            surprise = neurobit.compute_surprise(val.flatten().astype(np.float32), (val + noise).flatten().astype(np.float32))
+            surprise = neurobit.ompute_surprise(val.flatten().astype(np.float32), (val + noise).flatten().astype(np.float32))
             total_surprise += surprise
-            neurobit.update_importance(psy_metas[i], surprise, alpha=0.3, beta=0.01)
+            neurobit.update_importane(psy_metas[i], surprise, alpha=0.3, beta=0.01)
             
-        avg_imp = np.mean([m.importance for m in psy_metas])
-        print(f"  [→] Epoch {epoch+1}: Avg Surprise={total_surprise/len(orig_tensors):.2f} | Avg Importance={avg_imp:.1f}")
+        avg_imp = np.mean([m.importane for m in psy_metas])
+        print(f"  [] Epoh {epoh+1}: Avg Surprise={total_surprise/len(orig_tensors):.2f} | Avg Importane={avg_imp:.1f}")
 
     # Re-quantize
-    print("\n🎯 Final Reflective Re-quantization...")
-    metas_psy, data_psy = quantize_all(orig_tensors, mode='reflective_psy', logger=logger, metas_in=psy_metas)
+    print("\n Final Refletive Re-quantization...")
+    metas_psy, data_psy = quantize_all(orig_tensors, mode='refletive_psy', logger=logger, metas_in=psy_metas)
     
     # Stats
     psy_size = sum(len(d.value_stream) for d in data_psy)
@@ -69,16 +69,16 @@ def main():
     mse_psy = np.mean((orig_sample - neurobit.dequantize_adaptive(data_psy[0]))**2)
     improvement = (mse_baseline - mse_psy) / (mse_baseline + 1e-9) * 100
     
-    print(f"\n🏁 RESULTS:")
+    print(f"\n RESULTS:")
     print(f"  • MSE (Baseline 4-bit): {mse_baseline:.8f}")
-    print(f"  • MSE (Ψ-Protected 4/6-bit): {mse_psy:.8f}")
-    print(f"  • Error Reduction: {improvement:+.1f}%")
-    print(f"  • Boosted Layers: {sum(1 for m in psy_metas if m.importance > 160)} / {len(psy_metas)}")
+    print(f"  • MSE (Ψ-Proteted 4/6-bit): {mse_psy:.8f}")
+    print(f"  • Error Redution: {improvement:+.1f}%")
+    print(f"  • Boosted Layers: {sum(1 for m in psy_metas if m.importane > 160)} / {len(psy_metas)}")
     
     if improvement > 10:
-        print("\n✅ VALIDATION PASSED: Ψ-logic reduces error by increasing precision for critical layers.")
+        print("\n VALIDATION PASSED: Ψ-logi redues error by inreasing preision for ritial layers.")
     else:
-        print("\n❌ VALIDATION REJECTED: Improvement too low.")
+        print("\n VALIDATION REJECTED: Improvement too low.")
 
 if __name__ == '__main__':
     main()
