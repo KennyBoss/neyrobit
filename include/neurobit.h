@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <algorithm>
+#include <cstring>
 
 namespace neurobit {
 
@@ -39,9 +40,11 @@ struct TensorMeta {
     uint32_t zero_mask_bytes;
     uint32_t value_stream_bytes;
     bool is_adaptive = false;
+    uint8_t health = 255;
+    uint8_t importance = 128;
+    float surprise_accum = 0.0f;
 };
 
-// ...
 struct QuantizationResult {
     std::vector<uint8_t> zero_mask;
     std::vector<uint8_t> value_stream;
@@ -58,34 +61,28 @@ public:
     BitStreamWriter(size_t initial_capacity = 4096) {
         buffer.reserve(initial_capacity);
     }
-
-    inline void write_bit(bool bit) {
+    
+    void write_bit(bool bit) {
         if (bit_offset == 0) {
             buffer.push_back(0);
         }
         if (bit) {
-            buffer.back() |= (1 << bit_offset);
+            buffer.back() |= (1 << (7 - bit_offset));
         }
         bit_offset = (bit_offset + 1) % 8;
     }
-
-    inline void write_bits(uint32_t value, int count) {
-        for (int i = 0; i < count; ++i) {
+    
+    void write_bits(uint32_t value, uint8_t count) {
+        for (int i = count - 1; i >= 0; --i) {
             write_bit((value >> i) & 1);
         }
     }
-
-    void flush() {
-        // No-op for now as write_bit handles byte addition
-        // In a more optimized version, we'd handle bit_offset != 0
-    }
-
+    
     const std::vector<uint8_t>& get_data() const { return buffer; }
-    size_t get_byte_size() const { return buffer.size(); }
-
+    
 private:
     std::vector<uint8_t> buffer;
-    int bit_offset = 0;
+    uint8_t bit_offset = 0;
 };
 
 /**
@@ -93,99 +90,96 @@ private:
  */
 class BitStreamReader {
 public:
-    BitStreamReader(const uint8_t* data, size_t size) 
-        : buffer(data), total_size(size) {}
-
-    inline bool read_bit() {
-        if (byte_pos >= total_size) {
-            throw std::out_of_range("BitStreamReader: end of stream");
-        }
-        bool bit = (buffer[byte_pos] >> bit_offset) & 1;
+    BitStreamReader(const uint8_t* data, size_t size) : data(data), size(size) {}
+    
+    bool read_bit() {
+        if (byte_offset >= size) return false;
+        bool bit = (data[byte_offset] >> (7 - bit_offset)) & 1;
         bit_offset++;
         if (bit_offset == 8) {
             bit_offset = 0;
-            byte_pos++;
+            byte_offset++;
         }
         return bit;
     }
-
-    inline uint32_t read_bits(int count) {
-        uint32_t result = 0;
+    
+    uint32_t read_bits(uint8_t count) {
+        uint32_t value = 0;
         for (int i = 0; i < count; ++i) {
-            if (read_bit()) {
-                result |= (1 << i);
-            }
+            value = (value << 1) | (read_bit() ? 1 : 0);
         }
-        return result;
+        return value;
     }
-
+    
 private:
-    const uint8_t* buffer;
-    size_t total_size;
-    size_t byte_pos = 0;
-    int bit_offset = 0;
+    const uint8_t* data;
+    size_t size;
+    size_t byte_offset = 0;
+    uint8_t bit_offset = 0;
 };
 
-/**
- * @brief Adaptive Quantization Logic.
- */
-QuantizationResult quantize_adaptive(const float* input, size_t size, 
-                                     const AccessLogger& logger, 
-                                     uint16_t tensor_id = 0,
-                                     uint32_t threshold = 10);
-std::vector<float> dequantize_adaptive(const QuantizationResult& q);
-
-/**
- * @brief Simple bit-packing functions from Stage 1.
- */
-uint32_t pack8_int4(const uint8_t* values);
-void unpack8_int4(uint32_t packed, uint8_t* out_values);
-
-/**
- * @brief Access Log for "Memory" of the file.
- */
-enum class InferenceContext : uint8_t {
-    GENERIC = 0,
-    PREFILL = 1,
-    DECODE = 2,
-    LONG_SEQ = 3
+enum class InferenceContext {
+    GENERIC,
+    PREFILL,
+    DECODE,
+    LONG_SEQ
 };
 
 struct AccessEntry {
     uint16_t tensor_id;
-    uint16_t block_id;   // 256 weights per block
-    uint8_t count;       // saturating counter
-    uint8_t context;     // bitmask of InferenceContext
-};
-
-class AccessLogger {
-public:
-    void record_access(uint16_t tensor_id, size_t weight_idx, InferenceContext ctx);
-    std::vector<AccessEntry> get_top_entries(size_t limit = 1000) const;
-    void clear();
-
-    // Map: (tensor_id, block_id) -> {count, context_mask}
-    // Simple implementation for MVP
-    struct BlockKey {
-        uint16_t tensor_id;
-        uint16_t block_id;
-        bool operator<(const BlockKey& other) const {
-            if (tensor_id != other.tensor_id) return tensor_id < other.tensor_id;
-            return block_id < other.block_id;
-        }
-    };
-    struct BlockStats {
-        uint32_t count = 0;
-        uint8_t context_mask = 0;
-    };
-
-private:
-    std::map<BlockKey, BlockStats> stats;
+    uint16_t block_id;
+    uint32_t count;
+    InferenceContext context;
 };
 
 /**
- * @brief File I/O Logic for .nbit format.
+ * @brief AccessLogger tracks block usage during inference.
  */
+class AccessLogger {
+public:
+    void record_access(uint16_t tensor_id, uint16_t block_id, InferenceContext ctx = InferenceContext::GENERIC) {
+        uint32_t key = (static_cast<uint32_t>(tensor_id) << 16) | block_id;
+        counts[key]++;
+    }
+    
+    std::vector<AccessEntry> get_top_entries(size_t limit = 1000) const {
+        std::vector<AccessEntry> entries;
+        for (auto const& [key, count] : counts) {
+            AccessEntry e;
+            e.tensor_id = static_cast<uint16_t>(key >> 16);
+            e.block_id = static_cast<uint16_t>(key & 0xFFFF);
+            e.count = count;
+            e.context = InferenceContext::GENERIC;
+            entries.push_back(e);
+        }
+        std::sort(entries.begin(), entries.end(), [](const AccessEntry& a, const AccessEntry& b) {
+            return a.count > b.count;
+        });
+        if (entries.size() > limit) entries.resize(limit);
+        return entries;
+    }
+    
+    void clear() { counts.clear(); }
+    
+private:
+    std::map<uint32_t, uint32_t> counts;
+};
+
+// Core Kernels
+QuantizationResult quantize_f32_to_nbit4(const float* input, size_t size);
+std::vector<float> dequantize_nbit4_to_f32(const QuantizationResult& q);
+uint32_t pack8_int4(const uint8_t* values);
+void unpack8_int4(uint32_t packed, uint8_t* out);
+
+// Adaptive
+QuantizationResult quantize_adaptive(const float* input, size_t size, 
+                                     const AccessLogger& logger, 
+                                     const TensorMeta& meta, 
+                                     uint16_t tensor_id = 0,
+                                     uint32_t threshold = 10);
+std::vector<float> dequantize_adaptive(const QuantizationResult& q);
+
+// File I/O
 bool save_to_nbit(const std::string& path, 
                   const std::vector<TensorMeta>& metas,
                   const std::vector<QuantizationResult>& data,
@@ -196,13 +190,11 @@ struct LoadResult {
     std::vector<QuantizationResult> data;
     std::vector<AccessEntry> access_log;
 };
-
 LoadResult load_from_nbit(const std::string& path);
 
-/**
- * @brief Stage 2 Core Logic.
- */
-QuantizationResult quantize_f32_to_nbit4(const float* input, size_t size);
-std::vector<float> dequantize_nbit4_to_f32(const QuantizationResult& q);
+// Ψ-Core functions
+float compute_surprise(const float* predictions, const float* targets, size_t size);
+void update_importance(TensorMeta& meta, float surprise, float alpha = 0.05f, float beta = 0.005f);
+int get_bits_for_tensor(const TensorMeta& meta);
 
 } // namespace neurobit

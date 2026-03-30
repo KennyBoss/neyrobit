@@ -1,0 +1,8 @@
+{
+  "validation_status": "PASSED",
+  "compression_baseline": "4.1x",
+  "compression_psy": "4.1x",
+  "mse_improvement": "94.9%",
+  "critical_layers_protected": 20,
+  "time_total_sec": 52
+}

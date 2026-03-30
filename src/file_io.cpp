@@ -1,6 +1,7 @@
 #include "neurobit.h"
 #include <fstream>
 #include <iostream>
+#include <cstring>
 
 namespace neurobit {
 
@@ -26,11 +27,10 @@ bool save_to_nbit(const std::string& path,
     // 1. Write Header
     NBitHeader header;
     header.num_tensors = static_cast<uint32_t>(metas.size());
-    if (!access_log.empty()) {
-        uint32_t flags = 1; // has_access_log
-        // Map Flags field (bytes 12-15)
-        std::memcpy(&header.reserved[0], &flags, sizeof(uint32_t));
-    }
+    uint32_t flags = 0;
+    if (!access_log.empty()) flags |= 1; // has_access_log
+    std::memcpy(&header.reserved[0], &flags, sizeof(uint32_t));
+    
     ofs.write(reinterpret_cast<const char*>(&header), sizeof(NBitHeader));
 
     // 2. Write Tensors
@@ -53,6 +53,19 @@ bool save_to_nbit(const std::string& path,
         // Meta: Stats
         write_raw(ofs, q.num_elements);
         write_raw(ofs, q.scale);
+        
+        // Meta: Health and Importance
+        write_raw(ofs, meta.health);
+        write_raw(ofs, meta.importance);
+        write_raw(ofs, meta.surprise_accum);
+
+        // Data: Adaptive Profiles
+        uint32_t num_profiles = static_cast<uint32_t>(q.adaptive_profiles.size());
+        write_raw(ofs, num_profiles);
+        for (const auto& ap : q.adaptive_profiles) {
+            write_raw(ofs, ap.block_id);
+            write_raw(ofs, ap.bits);
+        }
 
         // Data: Zero Mask
         uint32_t zero_mask_size = static_cast<uint32_t>(q.zero_mask.size());
@@ -119,6 +132,20 @@ LoadResult load_from_nbit(const std::string& path) {
         read_raw(ifs, q.scale);
         meta.num_elements = q.num_elements;
         meta.scale = q.scale;
+
+        // Meta: Health and Importance
+        read_raw(ifs, meta.health);
+        read_raw(ifs, meta.importance);
+        read_raw(ifs, meta.surprise_accum);
+
+        // Data: Adaptive Profiles
+        uint32_t num_profiles;
+        read_raw(ifs, num_profiles);
+        q.adaptive_profiles.resize(num_profiles);
+        for (uint32_t j = 0; j < num_profiles; ++j) {
+            read_raw(ifs, q.adaptive_profiles[j].block_id);
+            read_raw(ifs, q.adaptive_profiles[j].bits);
+        }
 
         // Data: Zero Mask
         uint32_t zero_mask_size;

@@ -1,22 +1,39 @@
-# Build directories
+# Build and Environment
 build/
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
-Makefile
-
-# Compiled libraries/binaries
+venv/
+.venv/
+bin/
+lib/
+share/
+include/python*
 *.so
 *.dylib
 *.dll
-*.a
-*.lib
+*.pyd
 
-# Python caches
+# Models and Tensors (DO NOT PUSH)
+models/
+outputs/
+*.nbit
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.gguf
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+
+# Python Caches
 __pycache__/
 *.pyc
-
-# Local data or logs
-data/
-logs/
-.DS_Store
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/

@@ -1,0 +1,15 @@
+{
+  "baseline": {
+    "perplexity": 50508.406563994,
+    "consistency": 0.0
+  },
+  "psy": {
+    "perplexity": 1.117948322626405e+197,
+    "consistency": 0.0
+  },
+  "comparison": {
+    "perplexity_delta_pct": 2.2133905990678358e+194,
+    "consistency_delta": 0.0,
+    "winner": "baseline"
+  }
+}
